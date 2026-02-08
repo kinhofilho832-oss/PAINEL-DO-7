@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [customColor, setCustomColor] = useState("#000000");
   const [openDialogs, setOpenDialogs] = useState<Record<number, boolean>>({});
+  const [hasQuickAccess, setHasQuickAccess] = useState(false);
 
   // Fetch data from server
   const { data: balance } = trpc.balance.getBalance.useQuery();
@@ -30,7 +31,10 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    const token = localStorage.getItem("quickAccessToken");
+    setHasQuickAccess(!!token);
+    
+    if (!isAuthenticated && !token) {
       setLocation("/");
     }
   }, [isAuthenticated, setLocation]);
@@ -60,7 +64,15 @@ export default function Dashboard() {
     });
   };
 
-  if (!isAuthenticated) {
+  const handleLogout = () => {
+    localStorage.removeItem("quickAccessToken");
+    if (logout) {
+      logout();
+    }
+    setLocation("/");
+  };
+
+  if (!isAuthenticated && !hasQuickAccess) {
     return null;
   }
 
@@ -86,7 +98,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => logout()}
+              onClick={handleLogout}
               className="text-gray-400 hover:text-white"
             >
               <LogOut size={18} className="mr-2" />

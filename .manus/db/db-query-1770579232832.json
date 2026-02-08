@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, userId, adminCode FROM adminSettings LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3son4BFdhscGqNL.root --database YBhYxi6MjR7cyjGbzdJUed --execute SELECT id, userId, adminCode FROM adminSettings LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "1",
+      "adminCode": "123"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "adminCode": "380SOGZA"
+    },
+    {
+      "id": "3",
+      "userId": "1",
+      "adminCode": "VU3Y3YQS"
+    },
+    {
+      "id": "4",
+      "userId": "1",
+      "adminCode": "XWXG9S67"
+    },
+    {
+      "id": "5",
+      "userId": "1",
+      "adminCode": "3MXHZ83C"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tadminCode\n1\t1\t123\n2\t1\t380SOGZA\n3\t1\tVU3Y3YQS\n4\t1\tXWXG9S67\n5\t1\t3MXHZ83C\n",
+  "stderr": "",
+  "execution_time_ms": 342
+}

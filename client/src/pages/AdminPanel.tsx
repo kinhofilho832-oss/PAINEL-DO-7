@@ -14,6 +14,7 @@ export default function AdminPanel() {
   const [adminCodeVerified, setAdminCodeVerified] = useState(false);
   const [adminCode, setAdminCode] = useState("");
   const [tempCode, setTempCode] = useState("");
+  const [hasQuickAccess, setHasQuickAccess] = useState(false);
 
   // Fetch data
   const { data: adminSettings } = trpc.admin.getSettings.useQuery();
@@ -45,7 +46,10 @@ export default function AdminPanel() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    const token = localStorage.getItem("quickAccessToken");
+    setHasQuickAccess(!!token);
+    
+    if (!isAuthenticated && !token) {
       setLocation("/");
     }
   }, [isAuthenticated, setLocation]);
@@ -77,7 +81,15 @@ export default function AdminPanel() {
     });
   };
 
-  if (!isAuthenticated) {
+  const handleLogout = () => {
+    localStorage.removeItem("quickAccessToken");
+    if (logout) {
+      logout();
+    }
+    setLocation("/");
+  };
+
+  if (!isAuthenticated && !hasQuickAccess) {
     return null;
   }
 
@@ -134,7 +146,7 @@ export default function AdminPanel() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => logout()}
+              onClick={handleLogout}
               className="text-gray-400 hover:text-white"
             >
               <LogOut size={18} className="mr-2" />

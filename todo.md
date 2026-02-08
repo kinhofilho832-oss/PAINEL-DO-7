@@ -52,3 +52,10 @@
 - [x] Editor visual funcional
 - [x] Testes e validações
 - [x] Checkpoint final criado
+
+
+## Novas Funcionalidades Solicitadas
+
+- [x] Página de acesso rápido com código 'acesso123'
+- [x] Login direto no painel sem autenticação OAuth
+- [x] Validação de código de acesso rápido
