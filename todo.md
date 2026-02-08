@@ -60,3 +60,4 @@
 - [x] Login direto no painel sem autenticação OAuth
 - [x] Validação de código de acesso rápido
 - [x] Modificar página de login para aceitar código de acesso rápido direto
+- [x] Remover opção de login com Manus, deixar só código de acesso
