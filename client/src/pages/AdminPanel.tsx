@@ -1,6 +1,5 @@
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,28 +13,37 @@ export default function AdminPanel() {
   const [adminCodeVerified, setAdminCodeVerified] = useState(false);
   const [tempCode, setTempCode] = useState("");
   const [hasQuickAccess, setHasQuickAccess] = useState(false);
-
-  // Fetch data
-  const { data: adminSettings } = trpc.admin.getSettings.useQuery();
-  const { data: buttons } = trpc.buttons.list.useQuery();
-
-  // Mutations
-  const updateSettingsMutation = trpc.admin.updateSettings.useMutation({
-    onSuccess: () => {
-      toast.success("Configurações atualizadas com sucesso!");
-    },
-  });
-
-  const updateButtonMutation = trpc.buttons.update.useMutation({
-    onSuccess: () => {
-      toast.success("Botão atualizado com sucesso!");
-    },
-  });
+  
+  // Estado local para configurações
+  const [siteTitle, setSiteTitle] = useState("Painel Premium");
+  const [primaryColor, setPrimaryColor] = useState("#000000");
+  const [secondaryColor, setSecondaryColor] = useState("#FFFFFF");
+  const [accentColor, setAccentColor] = useState("#FF0000");
+  const [buttons, setButtons] = useState([
+    { id: 1, buttonLabel: "Transferência" },
+    { id: 2, buttonLabel: "Depósito" },
+    { id: 3, buttonLabel: "Saque" },
+  ]);
 
   useEffect(() => {
     const token = localStorage.getItem("quickAccessToken");
     const isTokenValid = !!token;
     setHasQuickAccess(isTokenValid);
+    
+    // Carregar configurações do localStorage
+    const savedSettings = localStorage.getItem("adminSettings");
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        setSiteTitle(settings.siteTitle || "Painel Premium");
+        setPrimaryColor(settings.primaryColor || "#000000");
+        setSecondaryColor(settings.secondaryColor || "#FFFFFF");
+        setAccentColor(settings.accentColor || "#FF0000");
+        setButtons(settings.buttons || buttons);
+      } catch (e) {
+        console.error("Erro ao carregar configurações:", e);
+      }
+    }
   }, []);
 
   const handleVerifyCode = () => {
@@ -54,22 +62,38 @@ export default function AdminPanel() {
   };
 
   const handleUpdateColor = (colorType: "primaryColor" | "secondaryColor" | "accentColor", value: string) => {
-    updateSettingsMutation.mutate({
-      [colorType]: value,
-    });
+    if (colorType === "primaryColor") setPrimaryColor(value);
+    if (colorType === "secondaryColor") setSecondaryColor(value);
+    if (colorType === "accentColor") setAccentColor(value);
+    
+    saveSettings();
+    toast.success("Cor atualizada!");
   };
 
   const handleUpdateButtonLabel = (buttonId: number, newLabel: string) => {
-    updateButtonMutation.mutate({
-      buttonId,
-      buttonLabel: newLabel,
-    });
+    const updatedButtons = buttons.map(btn => 
+      btn.id === buttonId ? { ...btn, buttonLabel: newLabel } : btn
+    );
+    setButtons(updatedButtons);
+    saveSettings();
+    toast.success("Botão atualizado!");
   };
 
   const handleUpdateSiteTitle = (newTitle: string) => {
-    updateSettingsMutation.mutate({
-      siteTitle: newTitle,
-    });
+    setSiteTitle(newTitle);
+    saveSettings();
+    toast.success("Título atualizado!");
+  };
+
+  const saveSettings = () => {
+    const settings = {
+      siteTitle,
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      buttons,
+    };
+    localStorage.setItem("adminSettings", JSON.stringify(settings));
   };
 
   const handleLogout = () => {
@@ -82,13 +106,6 @@ export default function AdminPanel() {
       handleVerifyCode();
     }
   };
-
-  useEffect(() => {
-    // Só redireciona se não tiver token E ainda não verificou o código
-    if (!hasQuickAccess && !adminCodeVerified && localStorage.getItem("quickAccessToken") === null) {
-      setLocation("/");
-    }
-  }, [hasQuickAccess, adminCodeVerified, setLocation]);
 
   if (!hasQuickAccess) {
     return null;
@@ -171,8 +188,9 @@ export default function AdminPanel() {
                 <Input
                   id="siteTitle"
                   type="text"
-                  defaultValue={adminSettings?.siteTitle || "Painel Premium"}
-                  onBlur={(e) => handleUpdateSiteTitle(e.target.value)}
+                  value={siteTitle}
+                  onChange={(e) => handleUpdateSiteTitle(e.target.value)}
+                  onBlur={() => saveSettings()}
                   className="bg-gray-800 border-gray-700 text-white mt-2"
                 />
               </div>
@@ -190,13 +208,13 @@ export default function AdminPanel() {
                   <input
                     id="primaryColor"
                     type="color"
-                    defaultValue={adminSettings?.primaryColor || "#000000"}
+                    value={primaryColor}
                     onChange={(e) => handleUpdateColor("primaryColor", e.target.value)}
                     className="w-12 h-10 rounded cursor-pointer"
                   />
                   <Input
                     type="text"
-                    defaultValue={adminSettings?.primaryColor || "#000000"}
+                    value={primaryColor}
                     onChange={(e) => handleUpdateColor("primaryColor", e.target.value)}
                     className="flex-1 bg-gray-800 border-gray-700 text-white"
                   />
@@ -209,13 +227,13 @@ export default function AdminPanel() {
                   <input
                     id="secondaryColor"
                     type="color"
-                    defaultValue={adminSettings?.secondaryColor || "#FFFFFF"}
+                    value={secondaryColor}
                     onChange={(e) => handleUpdateColor("secondaryColor", e.target.value)}
                     className="w-12 h-10 rounded cursor-pointer"
                   />
                   <Input
                     type="text"
-                    defaultValue={adminSettings?.secondaryColor || "#FFFFFF"}
+                    value={secondaryColor}
                     onChange={(e) => handleUpdateColor("secondaryColor", e.target.value)}
                     className="flex-1 bg-gray-800 border-gray-700 text-white"
                   />
@@ -228,13 +246,13 @@ export default function AdminPanel() {
                   <input
                     id="accentColor"
                     type="color"
-                    defaultValue={adminSettings?.accentColor || "#FF0000"}
+                    value={accentColor}
                     onChange={(e) => handleUpdateColor("accentColor", e.target.value)}
                     className="w-12 h-10 rounded cursor-pointer"
                   />
                   <Input
                     type="text"
-                    defaultValue={adminSettings?.accentColor || "#FF0000"}
+                    value={accentColor}
                     onChange={(e) => handleUpdateColor("accentColor", e.target.value)}
                     className="flex-1 bg-gray-800 border-gray-700 text-white"
                   />
@@ -248,20 +266,20 @@ export default function AdminPanel() {
             <h2 className="text-xl font-semibold mb-6">Personalização de Botões</h2>
             
             <div className="space-y-4">
-              {buttons?.map((btn) => (
+              {buttons.map((btn) => (
                 <div key={btn.id} className="flex items-end gap-4 p-4 bg-gray-800 rounded-lg">
                   <div className="flex-1">
                     <Label htmlFor={`button-${btn.id}`}>Nome do Botão</Label>
                     <Input
                       id={`button-${btn.id}`}
                       type="text"
-                      defaultValue={btn.buttonLabel}
-                      onBlur={(e) => handleUpdateButtonLabel(btn.id, e.target.value)}
+                      value={btn.buttonLabel}
+                      onChange={(e) => handleUpdateButtonLabel(btn.id, e.target.value)}
                       className="bg-gray-700 border-gray-600 text-white mt-2"
                     />
                   </div>
                   <Button
-                    style={{ backgroundColor: adminSettings?.primaryColor || "#000000" }}
+                    style={{ backgroundColor: primaryColor }}
                     className="text-white font-semibold"
                   >
                     Pré-visualizar

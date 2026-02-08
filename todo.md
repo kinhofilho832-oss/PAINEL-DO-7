@@ -65,3 +65,4 @@
 - [x] Corrigir redirecionamento ao acessar painel admin
 - [x] Corrigir bug de redirecionamento ao digitar código 123
 - [x] Corrigir bug ao clicar em Admin no dashboard
+- [x] Remover autenticação OAuth do AdminPanel e usar localStorage
