@@ -61,3 +61,4 @@
 - [x] Validação de código de acesso rápido
 - [x] Modificar página de login para aceitar código de acesso rápido direto
 - [x] Remover opção de login com Manus, deixar só código de acesso
+- [x] Corrigir fluxo: acesso123 para login, 123 para admin dentro do site

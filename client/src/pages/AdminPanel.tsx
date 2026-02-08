@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
@@ -8,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { LogOut, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
+const ADMIN_CODE = "123";
+
 export default function AdminPanel() {
-  const { user, logout, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [adminCodeVerified, setAdminCodeVerified] = useState(false);
-  const [adminCode, setAdminCode] = useState("");
   const [tempCode, setTempCode] = useState("");
   const [hasQuickAccess, setHasQuickAccess] = useState(false);
 
@@ -21,18 +20,6 @@ export default function AdminPanel() {
   const { data: buttons } = trpc.buttons.list.useQuery();
 
   // Mutations
-  const verifyCodeMutation = trpc.admin.verifyAdminCode.useMutation({
-    onSuccess: (result) => {
-      if (result.success) {
-        setAdminCodeVerified(true);
-        setAdminCode(tempCode);
-        toast.success("Código verificado com sucesso!");
-      } else {
-        toast.error("Código de administrador inválido");
-      }
-    },
-  });
-
   const updateSettingsMutation = trpc.admin.updateSettings.useMutation({
     onSuccess: () => {
       toast.success("Configurações atualizadas com sucesso!");
@@ -49,17 +36,24 @@ export default function AdminPanel() {
     const token = localStorage.getItem("quickAccessToken");
     setHasQuickAccess(!!token);
     
-    if (!isAuthenticated && !token) {
+    if (!token) {
       setLocation("/");
     }
-  }, [isAuthenticated, setLocation]);
+  }, [setLocation]);
 
   const handleVerifyCode = () => {
     if (!tempCode) {
       toast.error("Digite o código de administrador");
       return;
     }
-    verifyCodeMutation.mutate({ code: tempCode });
+    
+    if (tempCode === ADMIN_CODE) {
+      setAdminCodeVerified(true);
+      toast.success("Código verificado com sucesso!");
+    } else {
+      toast.error("Código de administrador inválido");
+      setTempCode("");
+    }
   };
 
   const handleUpdateColor = (colorType: "primaryColor" | "secondaryColor" | "accentColor", value: string) => {
@@ -83,13 +77,16 @@ export default function AdminPanel() {
 
   const handleLogout = () => {
     localStorage.removeItem("quickAccessToken");
-    if (logout) {
-      logout();
-    }
     setLocation("/");
   };
 
-  if (!isAuthenticated && !hasQuickAccess) {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleVerifyCode();
+    }
+  };
+
+  if (!hasQuickAccess) {
     return null;
   }
 
@@ -109,15 +106,16 @@ export default function AdminPanel() {
                 placeholder="Digite seu código"
                 value={tempCode}
                 onChange={(e) => setTempCode(e.target.value)}
-                className="bg-gray-800 border-gray-700 text-white"
+                onKeyPress={handleKeyPress}
+                className="bg-gray-800 border-gray-700 text-white mt-2"
+                autoFocus
               />
             </div>
             <Button
               onClick={handleVerifyCode}
               className="w-full bg-white text-black hover:bg-gray-200 font-semibold"
-              disabled={verifyCodeMutation.isPending}
             >
-              {verifyCodeMutation.isPending ? "Verificando..." : "Verificar Código"}
+              Verificar Código
             </Button>
           </div>
 
@@ -171,7 +169,7 @@ export default function AdminPanel() {
                   type="text"
                   defaultValue={adminSettings?.siteTitle || "Painel Premium"}
                   onBlur={(e) => handleUpdateSiteTitle(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-gray-800 border-gray-700 text-white mt-2"
                 />
               </div>
             </div>
