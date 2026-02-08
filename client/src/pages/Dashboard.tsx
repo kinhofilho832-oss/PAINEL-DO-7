@@ -132,6 +132,14 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">{siteTitle}</h1>
           <div className="flex items-center gap-4">
             <Button
+              onClick={() => setLocation("/notifications")}
+              variant="outline"
+              size="sm"
+              className="border-gray-700 text-white hover:bg-gray-800"
+            >
+              📱 Notificações
+            </Button>
+            <Button
               onClick={handleAccessAdmin}
               variant="outline"
               size="sm"

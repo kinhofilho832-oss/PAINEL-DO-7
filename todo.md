@@ -67,3 +67,4 @@
 - [x] Corrigir bug ao clicar em Admin no dashboard
 - [x] Remover autenticação OAuth do AdminPanel e usar localStorage
 - [x] Remover autenticação OAuth do Dashboard e usar localStorage
+- [x] Criar gerador de notificações fake com logo do Nubank
