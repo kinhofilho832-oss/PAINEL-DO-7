@@ -84,10 +84,11 @@ export default function AdminPanel() {
   };
 
   useEffect(() => {
-    if (!hasQuickAccess && localStorage.getItem("quickAccessToken") === null) {
+    // Só redireciona se não tiver token E ainda não verificou o código
+    if (!hasQuickAccess && !adminCodeVerified && localStorage.getItem("quickAccessToken") === null) {
       setLocation("/");
     }
-  }, [hasQuickAccess, setLocation]);
+  }, [hasQuickAccess, adminCodeVerified, setLocation]);
 
   if (!hasQuickAccess) {
     return null;

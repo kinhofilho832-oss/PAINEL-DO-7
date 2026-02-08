@@ -63,3 +63,4 @@
 - [x] Remover opção de login com Manus, deixar só código de acesso
 - [x] Corrigir fluxo: acesso123 para login, 123 para admin dentro do site
 - [x] Corrigir redirecionamento ao acessar painel admin
+- [x] Corrigir bug de redirecionamento ao digitar código 123
