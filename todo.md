@@ -59,3 +59,4 @@
 - [x] Página de acesso rápido com código 'acesso123'
 - [x] Login direto no painel sem autenticação OAuth
 - [x] Validação de código de acesso rápido
+- [x] Modificar página de login para aceitar código de acesso rápido direto
