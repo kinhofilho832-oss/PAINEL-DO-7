@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, adminSettings, AdminSettings, balanceHistory, customButtons, CustomButton, userBalance, InsertBalanceHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,125 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getAdminSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(adminSettings)
+    .where(eq(adminSettings.userId, userId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateAdminSettings(
+  userId: number,
+  updates: Partial<Omit<AdminSettings, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .update(adminSettings)
+    .set(updates)
+    .where(eq(adminSettings.userId, userId));
+  return result;
+}
+
+export async function getCustomButtons(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(customButtons)
+    .where(eq(customButtons.userId, userId))
+    .orderBy(customButtons.displayOrder);
+}
+
+export async function updateCustomButton(
+  buttonId: number,
+  updates: Partial<Omit<CustomButton, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+  return await db
+    .update(customButtons)
+    .set(updates)
+    .where(eq(customButtons.id, buttonId));
+}
+
+export async function getUserBalance(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(userBalance)
+    .where(eq(userBalance.userId, userId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getBalanceHistory(userId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(balanceHistory)
+    .where(eq(balanceHistory.userId, userId))
+    .orderBy(desc(balanceHistory.createdAt))
+    .limit(limit);
+}
+
+export async function addBalanceTransaction(
+  userId: number,
+  transaction: Omit<InsertBalanceHistory, 'userId'>
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.insert(balanceHistory).values({
+    ...transaction,
+    userId,
+  });
+  
+  // Update user balance
+  const currentBalance = await getUserBalance(userId);
+  const newBalance = currentBalance
+    ? currentBalance.balance + (transaction.type === 'entrada' ? transaction.amount : -transaction.amount)
+    : (transaction.type === 'entrada' ? transaction.amount : -transaction.amount);
+  
+  if (currentBalance) {
+    await db.update(userBalance).set({ balance: newBalance }).where(eq(userBalance.userId, userId));
+  } else {
+    await db.insert(userBalance).values({ userId, balance: newBalance });
+  }
+  
+  return result;
+}
+
+export async function initializeUserData(userId: number, adminCode: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Create admin settings
+  await db.insert(adminSettings).values({
+    userId,
+    adminCode,
+  }).onDuplicateKeyUpdate({ set: { adminCode } });
+  
+  // Create user balance
+  await db.insert(userBalance).values({ userId, balance: 0 }).onDuplicateKeyUpdate({ set: { balance: 0 } });
+  
+  // Create default buttons
+  const defaultButtons = [
+    { buttonName: 'transferencia', buttonLabel: 'Transferência', displayOrder: 1 },
+    { buttonName: 'deposito', buttonLabel: 'Depósito', displayOrder: 2 },
+    { buttonName: 'saque', buttonLabel: 'Saque', displayOrder: 3 },
+  ];
+  
+  for (const btn of defaultButtons) {
+    await db.insert(customButtons).values({
+      userId,
+      ...btn,
+    });
+  }
+}

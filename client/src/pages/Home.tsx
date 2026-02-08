@@ -1,31 +1,93 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { LogOut, LayoutDashboard, Settings } from "lucide-react";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col">
+        {/* Header */}
+        <header className="border-b border-gray-800 px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Painel Premium</h1>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-400">Bem-vindo, {user.name}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logout()}
+                className="text-gray-400 hover:text-white"
+              >
+                <LogOut size={18} className="mr-2" />
+                Sair
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 px-6 py-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Dashboard Card */}
+              <div
+                onClick={() => setLocation("/dashboard")}
+                className="bg-gray-900 border border-gray-800 rounded-lg p-8 cursor-pointer hover:border-gray-700 transition-colors"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <LayoutDashboard size={32} className="text-white" />
+                  <h2 className="text-xl font-semibold">Dashboard</h2>
+                </div>
+                <p className="text-gray-400 mb-6">
+                  Acesse seu painel principal com visualização de saldo, histórico de transações e ações rápidas.
+                </p>
+                <Button className="w-full bg-white text-black hover:bg-gray-200">
+                  Acessar Dashboard
+                </Button>
+              </div>
+
+              {/* Admin Panel Card */}
+              <div
+                onClick={() => setLocation("/admin")}
+                className="bg-gray-900 border border-gray-800 rounded-lg p-8 cursor-pointer hover:border-gray-700 transition-colors"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <Settings size={32} className="text-white" />
+                  <h2 className="text-xl font-semibold">Painel Admin</h2>
+                </div>
+                <p className="text-gray-400 mb-6">
+                  Personalize seu painel: altere cores, nomes de botões e configure suas preferências.
+                </p>
+                <Button className="w-full bg-white text-black hover:bg-gray-200">
+                  Acessar Admin
+                </Button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">Painel Administrativo Premium</h1>
+        <p className="text-gray-400 mb-8 max-w-md">
+          Plataforma completa de gestão com autenticação segura, personalização visual e controle total.
+        </p>
+        <Button
+          onClick={() => (window.location.href = getLoginUrl())}
+          className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg"
+        >
+          Fazer Login
+        </Button>
+      </div>
     </div>
   );
 }
