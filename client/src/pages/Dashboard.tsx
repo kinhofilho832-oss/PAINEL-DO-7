@@ -1,6 +1,5 @@
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,20 +12,16 @@ export default function Dashboard() {
   const [customColor, setCustomColor] = useState("#000000");
   const [openDialogs, setOpenDialogs] = useState<Record<number, boolean>>({});
   const [hasQuickAccess, setHasQuickAccess] = useState(false);
-
-  // Fetch data from server
-  const { data: balance } = trpc.balance.getBalance.useQuery();
-  const { data: history } = trpc.balance.getHistory.useQuery();
-  const { data: buttons } = trpc.buttons.list.useQuery();
-  const { data: adminSettings } = trpc.admin.getSettings.useQuery();
-
-  // Mutations
-  const addTransactionMutation = trpc.balance.addTransaction.useMutation({
-    onSuccess: () => {
-      toast.success("Transação adicionada com sucesso!");
-      setOpenDialogs({});
-    },
-  });
+  
+  // Estado local para dados
+  const [siteTitle, setSiteTitle] = useState("Painel Premium");
+  const [balance, setBalance] = useState(0);
+  const [history, setHistory] = useState<any[]>([]);
+  const [buttons, setButtons] = useState([
+    { id: 1, buttonLabel: "Transferência" },
+    { id: 2, buttonLabel: "Depósito" },
+    { id: 3, buttonLabel: "Saque" },
+  ]);
 
   useEffect(() => {
     const token = localStorage.getItem("quickAccessToken");
@@ -34,16 +29,45 @@ export default function Dashboard() {
       setLocation("/");
     } else {
       setHasQuickAccess(true);
+      
+      // Carregar configurações do localStorage
+      const savedSettings = localStorage.getItem("adminSettings");
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings);
+          setSiteTitle(settings.siteTitle || "Painel Premium");
+          setCustomColor(settings.primaryColor || "#000000");
+          setButtons(settings.buttons || buttons);
+        } catch (e) {
+          console.error("Erro ao carregar configurações:", e);
+        }
+      }
+      
+      // Carregar histórico de transações do localStorage
+      const savedHistory = localStorage.getItem("transactionHistory");
+      if (savedHistory) {
+        try {
+          const historyData = JSON.parse(savedHistory);
+          setHistory(historyData);
+          
+          // Calcular saldo
+          let totalBalance = 0;
+          historyData.forEach((transaction: any) => {
+            if (transaction.type === "entrada") {
+              totalBalance += transaction.amount;
+            } else {
+              totalBalance -= transaction.amount;
+            }
+          });
+          setBalance(totalBalance);
+        } catch (e) {
+          console.error("Erro ao carregar histórico:", e);
+        }
+      }
     }
   }, [setLocation]);
 
-  useEffect(() => {
-    if (adminSettings?.primaryColor) {
-      setCustomColor(adminSettings.primaryColor);
-    }
-  }, [adminSettings]);
-
-  const handleAddTransaction = (type: "entrada" | "saida") => {
+  const handleAddTransaction = (buttonId: number, type: "entrada" | "saida") => {
     const amountInput = document.querySelector("input[type='number']") as HTMLInputElement;
     const pixKeyInput = document.querySelector("input[type='text']") as HTMLInputElement;
 
@@ -52,12 +76,39 @@ export default function Dashboard() {
       return;
     }
 
-    addTransactionMutation.mutate({
-      amount: parseFloat(amountInput.value),
-      pixKey: pixKeyInput.value,
+    const amount = parseFloat(amountInput.value);
+    const pixKey = pixKeyInput.value;
+
+    // Criar transação
+    const newTransaction = {
+      id: Date.now(),
+      amount,
+      pixKey,
       type,
-      description: `Transação ${type}`,
-    });
+      createdAt: new Date().toISOString(),
+      buttonId,
+    };
+
+    // Atualizar histórico
+    const updatedHistory = [newTransaction, ...history];
+    setHistory(updatedHistory);
+    localStorage.setItem("transactionHistory", JSON.stringify(updatedHistory));
+
+    // Atualizar saldo
+    let newBalance = balance;
+    if (type === "entrada") {
+      newBalance += amount;
+    } else {
+      newBalance -= amount;
+    }
+    setBalance(newBalance);
+
+    // Limpar inputs
+    amountInput.value = "";
+    pixKeyInput.value = "";
+    setOpenDialogs({});
+
+    toast.success("Transação adicionada com sucesso!");
   };
 
   const handleLogout = () => {
@@ -69,8 +120,7 @@ export default function Dashboard() {
     setLocation("/admin");
   };
 
-  // Não renderiza nada enquanto verifica o token
-  if (!hasQuickAccess && !localStorage.getItem("quickAccessToken")) {
+  if (!hasQuickAccess) {
     return null;
   }
 
@@ -79,7 +129,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b border-gray-800 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{adminSettings?.siteTitle || "Painel Premium"}</h1>
+          <h1 className="text-2xl font-bold">{siteTitle}</h1>
           <div className="flex items-center gap-4">
             <Button
               onClick={handleAccessAdmin}
@@ -110,7 +160,7 @@ export default function Dashboard() {
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
             <h2 className="text-gray-400 text-sm mb-2">Saldo Disponível</h2>
             <h1 className="text-4xl font-bold" style={{ color: customColor }}>
-              R$ {(typeof balance === 'number' ? balance : 0).toFixed(2)}
+              R$ {balance.toFixed(2)}
             </h1>
             <p className="text-gray-500 text-sm mt-4">
               Saldo disponível para transações
@@ -119,7 +169,7 @@ export default function Dashboard() {
 
           {/* Action Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {buttons?.map((btn) => (
+            {buttons.map((btn) => (
               <Dialog key={btn.id} open={openDialogs[btn.id]} onOpenChange={(open) => setOpenDialogs({ ...openDialogs, [btn.id]: open })}>
                 <DialogTrigger asChild>
                   <Button
@@ -154,14 +204,14 @@ export default function Dashboard() {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => handleAddTransaction("entrada")}
+                        onClick={() => handleAddTransaction(btn.id, "entrada")}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       >
                         <ArrowDownLeft size={18} className="mr-2" />
                         Entrada
                       </Button>
                       <Button
-                        onClick={() => handleAddTransaction("saida")}
+                        onClick={() => handleAddTransaction(btn.id, "saida")}
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                       >
                         <ArrowUpRight size={18} className="mr-2" />
