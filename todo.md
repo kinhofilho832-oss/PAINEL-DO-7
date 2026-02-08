@@ -64,3 +64,4 @@
 - [x] Corrigir fluxo: acesso123 para login, 123 para admin dentro do site
 - [x] Corrigir redirecionamento ao acessar painel admin
 - [x] Corrigir bug de redirecionamento ao digitar código 123
+- [x] Corrigir bug ao clicar em Admin no dashboard

@@ -30,10 +30,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("quickAccessToken");
-    setHasQuickAccess(!!token);
-    
     if (!token) {
       setLocation("/");
+    } else {
+      setHasQuickAccess(true);
     }
   }, [setLocation]);
 
@@ -69,7 +69,8 @@ export default function Dashboard() {
     setLocation("/admin");
   };
 
-  if (!hasQuickAccess) {
+  // Não renderiza nada enquanto verifica o token
+  if (!hasQuickAccess && !localStorage.getItem("quickAccessToken")) {
     return null;
   }
 
