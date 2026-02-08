@@ -34,12 +34,9 @@ export default function AdminPanel() {
 
   useEffect(() => {
     const token = localStorage.getItem("quickAccessToken");
-    setHasQuickAccess(!!token);
-    
-    if (!token) {
-      setLocation("/");
-    }
-  }, [setLocation]);
+    const isTokenValid = !!token;
+    setHasQuickAccess(isTokenValid);
+  }, []);
 
   const handleVerifyCode = () => {
     if (!tempCode) {
@@ -85,6 +82,12 @@ export default function AdminPanel() {
       handleVerifyCode();
     }
   };
+
+  useEffect(() => {
+    if (!hasQuickAccess && localStorage.getItem("quickAccessToken") === null) {
+      setLocation("/");
+    }
+  }, [hasQuickAccess, setLocation]);
 
   if (!hasQuickAccess) {
     return null;
