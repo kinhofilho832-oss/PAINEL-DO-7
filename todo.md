@@ -68,3 +68,14 @@
 - [x] Remover autenticação OAuth do AdminPanel e usar localStorage
 - [x] Remover autenticação OAuth do Dashboard e usar localStorage
 - [x] Criar gerador de notificações fake com logo do Nubank
+
+
+## Redesign do Dashboard
+
+- [x] Redesenhar dashboard com fundo roxo/azul (gradiente)
+- [x] Adicionar cards de Entradas e Saídas com cores verde e vermelho
+- [x] Implementar menu de ações (Adicionar, Cartões, Relatório)
+- [x] Adicionar seção de Transações
+- [x] Remover seção de Metas
+- [x] Implementar painel admin para editar tudo
+- [ ] Publicar e deixar permanente online
