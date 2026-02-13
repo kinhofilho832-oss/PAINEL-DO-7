@@ -79,3 +79,4 @@
 - [x] Remover seção de Metas
 - [x] Implementar painel admin para editar tudo
 - [ ] Publicar e deixar permanente online
+- [x] Debugar e corrigir erros de renderização do Dashboard
