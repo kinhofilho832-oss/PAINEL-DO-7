@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Settings, Plus, CreditCard, BarChart3, Eye, EyeOff } from "lucide-react";
+import { LogOut, Settings, Plus, CreditCard, BarChart3, Eye, EyeOff, Send, Wallet, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Dashboard() {
@@ -26,6 +26,13 @@ export default function Dashboard() {
   const [gradientStart, setGradientStart] = useState("#1e40af");
   const [gradientMiddle, setGradientMiddle] = useState("#7c3aed");
   const [gradientEnd, setGradientEnd] = useState("#000000");
+
+  // Botões customizáveis
+  const [customButtons, setCustomButtons] = useState([
+    { id: 1, name: "Transferência", icon: "Send", color: "bg-blue-600" },
+    { id: 2, name: "Depósito", icon: "Wallet", color: "bg-green-600" },
+    { id: 3, name: "Investimento", icon: "TrendingUp", color: "bg-purple-600" },
+  ]);
 
   useEffect(() => {
     const token = localStorage.getItem("quickAccessToken");
@@ -49,6 +56,7 @@ export default function Dashboard() {
         setGradientStart(settings.gradientStart || "#1e40af");
         setGradientMiddle(settings.gradientMiddle || "#7c3aed");
         setGradientEnd(settings.gradientEnd || "#000000");
+        setCustomButtons(settings.customButtons || customButtons);
       } catch (e) {
         console.error("Erro ao carregar configurações:", e);
       }
@@ -140,32 +148,47 @@ export default function Dashboard() {
           </div>
 
           {/* Menu de Ações */}
-          <div className="grid grid-cols-3 gap-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 h-20 flex flex-col items-center justify-center rounded-2xl">
-                  <Plus size={24} className="mb-2" />
-                  <span className="text-sm">Adicionar</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-gray-900 border-gray-800">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Transação</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Descrição</Label>
-                    <Input placeholder="Ex: Salário" className="bg-gray-800 border-gray-700 text-white mt-2" />
-                  </div>
-                  <div>
-                    <Label>Valor</Label>
-                    <Input type="number" placeholder="0.00" className="bg-gray-800 border-gray-700 text-white mt-2" />
-                  </div>
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700">Adicionar</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Botões Customizáveis */}
+            {customButtons.map((btn) => {
+              const iconMap: Record<string, any> = {
+                Send: Send,
+                Wallet: Wallet,
+                TrendingUp: TrendingUp,
+                Plus: Plus,
+                CreditCard: CreditCard,
+                BarChart3: BarChart3,
+              };
+              const IconComponent = iconMap[btn.icon] || Plus;
+              return (
+                <Dialog key={btn.id}>
+                  <DialogTrigger asChild>
+                    <Button className={`w-full ${btn.color} hover:opacity-80 h-20 flex flex-col items-center justify-center rounded-2xl`}>
+                      <IconComponent size={24} className="mb-2" />
+                      <span className="text-sm">{btn.name}</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-gray-900 border-gray-800">
+                    <DialogHeader>
+                      <DialogTitle>{btn.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Chave PIX</Label>
+                        <Input placeholder="Ex: seu@email.com" className="bg-gray-800 border-gray-700 text-white mt-2" />
+                      </div>
+                      <div>
+                        <Label>Valor</Label>
+                        <Input type="number" placeholder="0.00" className="bg-gray-800 border-gray-700 text-white mt-2" />
+                      </div>
+                      <Button className="w-full bg-purple-600 hover:bg-purple-700">Confirmar</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              );
+            })}
 
+            {/* Cartões */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 h-20 flex flex-col items-center justify-center rounded-2xl">
@@ -181,9 +204,10 @@ export default function Dashboard() {
               </DialogContent>
             </Dialog>
 
+            {/* Relatório */}
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="w-full bg-orange-600 hover:bg-orange-700 h-20 flex flex-col items-center justify-center rounded-2xl">
+                <Button onClick={() => setLocation("/analytics")} className="w-full bg-orange-600 hover:bg-orange-700 h-20 flex flex-col items-center justify-center rounded-2xl">
                   <BarChart3 size={24} className="mb-2" />
                   <span className="text-sm">Relatório</span>
                 </Button>
@@ -192,7 +216,7 @@ export default function Dashboard() {
                 <DialogHeader>
                   <DialogTitle>Relatório</DialogTitle>
                 </DialogHeader>
-                <div className="text-gray-400">Relatório em desenvolvimento</div>
+                <Button onClick={() => setLocation("/analytics")} className="w-full bg-purple-600 hover:bg-purple-700">Ver Análise Completa</Button>
               </DialogContent>
             </Dialog>
           </div>
