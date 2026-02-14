@@ -7,6 +7,85 @@ import { Label } from "@/components/ui/label";
 import { LogOut, Settings, Plus, CreditCard, BarChart3, Eye, EyeOff, Send, Wallet, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
+// Componente separado para cada botão customizável
+function CustomButtonDialog({ btn, onWithdraw }: any) {
+  const [pixKey, setPixKey] = useState("");
+  const [pixValue, setPixValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const getIcon = (id: number) => {
+    switch(id) {
+      case 1: return Send;
+      case 2: return Wallet;
+      case 3: return TrendingUp;
+      case 4: return CreditCard;
+      case 5: return BarChart3;
+      default: return Plus;
+    }
+  };
+
+  const IconComponent = getIcon(btn.id);
+
+  const handleConfirm = () => {
+    if (!pixKey.trim() || !pixValue.trim()) {
+      toast.error("Preencha a chave PIX e o valor!");
+      return;
+    }
+    
+    const withdrawValue = parseFloat(pixValue);
+    if (isNaN(withdrawValue) || withdrawValue <= 0) {
+      toast.error("Valor inválido!");
+      return;
+    }
+    
+    // Chamar o callback para atualizar saldo e saídas
+    onWithdraw(withdrawValue);
+    
+    toast.success("O SEU SAQUE FOI CONCLUÍDO COM SUCESSO AGORA ESPERAR EM ATÉ 1HORA ÚTEIS O DINHEIRO CAÍRA");
+    setPixKey("");
+    setPixValue("");
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className={`w-full ${btn.color} hover:opacity-80 h-20 flex flex-col items-center justify-center rounded-2xl`}>
+          <IconComponent size={24} className="mb-2" />
+          <span className="text-sm">{btn.name}</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="bg-gray-900 border-gray-800">
+        <DialogHeader>
+          <DialogTitle>{btn.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Chave PIX</Label>
+            <Input 
+              placeholder="Ex: seu@email.com" 
+              className="bg-gray-800 border-gray-700 text-white mt-2"
+              value={pixKey}
+              onChange={(e) => setPixKey(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Valor</Label>
+            <Input 
+              type="number" 
+              placeholder="0.00" 
+              className="bg-gray-800 border-gray-700 text-white mt-2"
+              value={pixValue}
+              onChange={(e) => setPixValue(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleConfirm} className="w-full bg-purple-600 hover:bg-purple-700">Confirmar</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [hasQuickAccess, setHasQuickAccess] = useState(false);
@@ -79,6 +158,23 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("quickAccessToken");
     setLocation("/");
+  };
+
+  const handleWithdraw = (withdrawValue: number) => {
+    // Atualizar saldo (diminuir)
+    const newBalance = balance - withdrawValue;
+    setBalance(newBalance);
+    
+    // Atualizar saídas (aumentar)
+    const newExits = exits + withdrawValue;
+    setExits(newExits);
+    
+    // Salvar no localStorage
+    const currentSettings = localStorage.getItem("dashboardSettings");
+    const settings = currentSettings ? JSON.parse(currentSettings) : {};
+    settings.balance = newBalance;
+    settings.exits = newExits;
+    localStorage.setItem("dashboardSettings", JSON.stringify(settings));
   };
 
   if (!hasQuickAccess) {
@@ -154,77 +250,9 @@ export default function Dashboard() {
           {/* Menu de Ações */}
           <div className="grid grid-cols-2 gap-4">
             {/* Botões Customizáveis */}
-            {customButtons.map((btn: any) => {
-              const getIcon = (id: number) => {
-                switch(id) {
-                  case 1: return Send;
-                  case 2: return Wallet;
-                  case 3: return TrendingUp;
-                  case 4: return CreditCard;
-                  case 5: return BarChart3;
-                  default: return Plus;
-                }
-              };
-              const IconComponent = getIcon(btn.id);
-              return (
-                <Dialog key={btn.id}>
-                  <DialogTrigger asChild>
-                    <Button className={`w-full ${btn.color} hover:opacity-80 h-20 flex flex-col items-center justify-center rounded-2xl`}>
-                      <IconComponent size={24} className="mb-2" />
-                      <span className="text-sm">{btn.name}</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-gray-900 border-gray-800">
-                    <DialogHeader>
-                      <DialogTitle>{btn.name}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Chave PIX</Label>
-                        <Input placeholder="Ex: seu@email.com" className="bg-gray-800 border-gray-700 text-white mt-2" />
-                      </div>
-                      <div>
-                        <Label>Valor</Label>
-                        <Input type="number" placeholder="0.00" className="bg-gray-800 border-gray-700 text-white mt-2" />
-                      </div>
-                      <Button className="w-full bg-purple-600 hover:bg-purple-700">Confirmar</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              );
-            })}
-
-            {/* Cartões */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 h-20 flex flex-col items-center justify-center rounded-2xl">
-                  <CreditCard size={24} className="mb-2" />
-                  <span className="text-sm">Cartões</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-gray-900 border-gray-800">
-                <DialogHeader>
-                  <DialogTitle>Meus Cartões</DialogTitle>
-                </DialogHeader>
-                <div className="text-gray-400">Nenhum cartão cadastrado</div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Relatório */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button onClick={() => setLocation("/analytics")} className="w-full bg-orange-600 hover:bg-orange-700 h-20 flex flex-col items-center justify-center rounded-2xl">
-                  <BarChart3 size={24} className="mb-2" />
-                  <span className="text-sm">Relatório</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-gray-900 border-gray-800">
-                <DialogHeader>
-                  <DialogTitle>Relatório</DialogTitle>
-                </DialogHeader>
-                <Button onClick={() => setLocation("/analytics")} className="w-full bg-purple-600 hover:bg-purple-700">Ver Análise Completa</Button>
-              </DialogContent>
-            </Dialog>
+            {customButtons.map((btn: any) => (
+              <CustomButtonDialog key={btn.id} btn={btn} onWithdraw={handleWithdraw} />
+            ))}
           </div>
 
           {/* Transações */}
