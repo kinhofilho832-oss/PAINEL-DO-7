@@ -1,5 +1,5 @@
-import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -29,9 +29,11 @@ export default function Dashboard() {
 
   // Botões customizáveis
   const [customButtons, setCustomButtons] = useState([
-    { id: 1, name: "Transferência", icon: "Send", color: "bg-blue-600" },
-    { id: 2, name: "Depósito", icon: "Wallet", color: "bg-green-600" },
-    { id: 3, name: "Investimento", icon: "TrendingUp", color: "bg-purple-600" },
+    { id: 1, name: "Transferência", color: "bg-blue-600" },
+    { id: 2, name: "Depósito", color: "bg-green-600" },
+    { id: 3, name: "Investimento", color: "bg-purple-600" },
+    { id: 4, name: "Cartões", color: "bg-blue-600" },
+    { id: 5, name: "Relatório", color: "bg-red-600" },
   ]);
 
   useEffect(() => {
@@ -56,7 +58,9 @@ export default function Dashboard() {
         setGradientStart(settings.gradientStart || "#1e40af");
         setGradientMiddle(settings.gradientMiddle || "#7c3aed");
         setGradientEnd(settings.gradientEnd || "#000000");
-        setCustomButtons(settings.customButtons || customButtons);
+        if (settings.buttons) {
+          setCustomButtons(settings.buttons);
+        }
       } catch (e) {
         console.error("Erro ao carregar configurações:", e);
       }
@@ -150,16 +154,18 @@ export default function Dashboard() {
           {/* Menu de Ações */}
           <div className="grid grid-cols-2 gap-4">
             {/* Botões Customizáveis */}
-            {customButtons.map((btn) => {
-              const iconMap: Record<string, any> = {
-                Send: Send,
-                Wallet: Wallet,
-                TrendingUp: TrendingUp,
-                Plus: Plus,
-                CreditCard: CreditCard,
-                BarChart3: BarChart3,
+            {customButtons.map((btn: any) => {
+              const getIcon = (id: number) => {
+                switch(id) {
+                  case 1: return Send;
+                  case 2: return Wallet;
+                  case 3: return TrendingUp;
+                  case 4: return CreditCard;
+                  case 5: return BarChart3;
+                  default: return Plus;
+                }
               };
-              const IconComponent = iconMap[btn.icon] || Plus;
+              const IconComponent = getIcon(btn.id);
               return (
                 <Dialog key={btn.id}>
                   <DialogTrigger asChild>
