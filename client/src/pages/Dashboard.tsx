@@ -8,7 +8,7 @@ import { LogOut, Settings, Plus, CreditCard, BarChart3, Eye, EyeOff, Send, Walle
 import { toast } from "sonner";
 
 // Componente separado para cada botão customizável
-function CustomButtonDialog({ btn, onWithdraw }: any) {
+function CustomButtonDialog({ btn, onWithdraw, setLocation }: any) {
   const [pixKey, setPixKey] = useState("");
   const [pixValue, setPixValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -46,6 +46,37 @@ function CustomButtonDialog({ btn, onWithdraw }: any) {
     setPixValue("");
     setIsOpen(false);
   };
+
+  // Se for o botão GERAR CC, mostra um modal com botão para gerar
+  if (btn.id === 3) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button className={`w-full ${btn.color} hover:opacity-80 h-20 flex flex-col items-center justify-center rounded-2xl`}>
+            <IconComponent size={24} className="mb-2" />
+            <span className="text-sm">{btn.name}</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle>Gerador de Cartão de Crédito</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-300">Clique em "Gerar" para criar um novo cartão de crédito aleatório.</p>
+            <Button 
+              onClick={() => {
+                setIsOpen(false);
+                setLocation("/generate-cc");
+              }}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              Gerar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -110,7 +141,7 @@ export default function Dashboard() {
   const [customButtons, setCustomButtons] = useState([
     { id: 1, name: "Transferência", color: "bg-blue-600" },
     { id: 2, name: "Depósito", color: "bg-green-600" },
-    { id: 3, name: "Investimento", color: "bg-purple-600" },
+    { id: 3, name: "GERAR CC", color: "bg-purple-600" },
     { id: 4, name: "Cartões", color: "bg-blue-600" },
     { id: 5, name: "Relatório", color: "bg-red-600" },
   ]);
@@ -251,7 +282,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-4">
             {/* Botões Customizáveis */}
             {customButtons.map((btn: any) => (
-              <CustomButtonDialog key={btn.id} btn={btn} onWithdraw={handleWithdraw} />
+              <CustomButtonDialog key={btn.id} btn={btn} onWithdraw={handleWithdraw} setLocation={setLocation} />
             ))}
           </div>
 
