@@ -141,7 +141,7 @@ export default function GenerateCC() {
 
           {/* Aviso */}
           <div className="mt-6 text-center text-purple-300 text-sm">
-            💡 Dados gerados aleatoriamente apenas para diversão
+            EQP DO BOSS 🥇<br />NOIS QUE FAZ AS NOTAS
           </div>
         </div>
       </main>
